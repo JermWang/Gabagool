@@ -31,21 +31,12 @@ html.locked,body.locked{overflow:hidden;height:100%}
   font-size:clamp(22px,3.4vw,38px);color:#fff;text-indent:.32em}
 #enter:hover span{color:var(--gold)}
 @keyframes enterIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-#tapstart{position:relative;z-index:2;display:none;font-family:Impact,sans-serif;
-  letter-spacing:.3em;font-size:20px;color:#fff;background:none;border:0}
-#tapstart.show{display:block}
 #skip{position:absolute;right:18px;bottom:18px;z-index:3;background:rgba(0,0,0,.55);
   border:2px solid rgba(255,255,255,.55);border-radius:6px;padding:9px 16px;
   font-family:Impact,sans-serif;letter-spacing:.18em;font-size:15px;color:#fff;
   text-indent:.18em;opacity:.75;transition:opacity .15s,border-color .15s}
 #skip:hover{opacity:1;border-color:var(--gold);color:var(--gold)}
 #skip.gone{display:none}
-#sound{position:absolute;left:18px;bottom:18px;z-index:3;display:none;
-  background:rgba(0,0,0,.55);border:2px solid var(--gold);border-radius:6px;
-  padding:9px 16px;font-family:Impact,sans-serif;letter-spacing:.18em;font-size:15px;
-  color:var(--gold);text-indent:.18em;animation:soundPulse 1.4s ease-in-out infinite alternate}
-#sound.show{display:block}
-@keyframes soundPulse{to{box-shadow:0 0 18px var(--gold)}}
 
 /* ---- background video ---- */
 #bgvid{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-3}
@@ -142,10 +133,8 @@ footer img{vertical-align:middle;margin:6px}
 
 <div id="gate">
   <video id="introvid" src="assets/video/PROMO%201.mp4" playsinline preload="auto"></video>
-  <button id="tapstart">CLICK TO PLAY</button>
-  <button id="enter"><img src="assets/gifs/flag-big.gif" alt=""><span>ENTER</span></button>
-  <button id="skip">SKIP</button>
-  <button id="sound">TAP FOR SOUND</button>
+  <button id="enter" class="show"><img src="assets/gifs/flag-big.gif" alt=""><span>ENTER</span></button>
+  <button id="skip" class="gone">SKIP</button>
 </div>
 
 <video id="bgvid" src="assets/video/PROMO%201.mp4" muted loop playsinline></video>
@@ -289,80 +278,48 @@ function toggle(){
 bb.addEventListener('click',e=>{e.stopPropagation();toggle()});
 song.volume=.55;
 
-/* ---------- intro gate: promo plays through, then the flag lets you in ---------- */
+/* ---------- intro gate: click ENTER -> promo plays with sound -> site ---------- */
 (function(){
   const gate=document.getElementById('gate'), intro=document.getElementById('introvid'),
-        enter=document.getElementById('enter'), tap=document.getElementById('tapstart'),
-        skip=document.getElementById('skip'), sound=document.getElementById('sound'),
+        enter=document.getElementById('enter'), skip=document.getElementById('skip'),
         bg=document.getElementById('bgvid');
   const root=document.documentElement;
   root.classList.add('locked'); document.body.classList.add('locked');
 
-  const showEnter=()=>{
-    tap.classList.remove('show'); skip.classList.add('gone');
-    enter.classList.add('show');
-  };
-  // the promo ends on ~2s of black, so bring the flag up before the video actually finishes
-  const LEAD=2.4;
-  intro.addEventListener('timeupdate',()=>{
-    if(isFinite(intro.duration)&&intro.currentTime>=intro.duration-LEAD) showEnter();
-  });
-  intro.addEventListener('ended',showEnter);
-
-  // skip the promo at any point -> straight to the flag
-  const doSkip=()=>{intro.pause(); showEnter()};
-  skip.addEventListener('click',doSkip);
-  document.addEventListener('keydown',e=>{
-    if(gate.isConnected&&(e.key==='Escape'||e.key===' '||e.key==='Enter')&&!enter.classList.contains('show')){
-      e.preventDefault(); doSkip();
-    }
-  });
-  // safety net: if the file never reports progress, fall back to its duration
-  intro.addEventListener('loadedmetadata',()=>{
-    if(isFinite(intro.duration)&&intro.duration>0)
-      setTimeout(showEnter,Math.max(0,intro.duration-LEAD+.4)*1000);
-  });
-
-  /* Audio. Browsers only autoplay video that is MUTED, so the promo can either
-     start on its own or have sound -- not both, until the visitor interacts.
-     Try with sound first; if the browser refuses, fall back to muted playback
-     and offer one tap, which is the gesture that unlocks audio. */
-  let wantSound=true;
-  const unmute=()=>{
-    wantSound=true; intro.muted=false; intro.volume=1;
-    sound.classList.remove('show');
-    intro.play().catch(()=>{});
-  };
-  const fallbackMuted=()=>{
-    wantSound=false; intro.muted=true;
-    sound.classList.add('show');
-    intro.play().catch(()=>{                     // even muted playback refused -> ask for a click
-      sound.classList.remove('show'); tap.classList.add('show');
-      tap.addEventListener('click',unmute,{once:true});
-    });
-  };
-
-  sound.addEventListener('click',e=>{e.stopPropagation();unmute()});
-  // any first tap on the gate itself also turns the sound on
-  gate.addEventListener('pointerdown',e=>{
-    if(!wantSound&&e.target!==skip&&e.target!==enter&&!enter.contains(e.target)) unmute();
-  });
-  // Chrome pauses an unmuted video that was never allowed sound; catch that too
-  intro.addEventListener('pause',()=>{
-    if(wantSound&&gate.isConnected&&!gate.classList.contains('done')
-       &&!enter.classList.contains('show')&&!intro.ended&&intro.currentTime<1) fallbackMuted();
-  });
-
-  intro.muted=false; intro.volume=1;
-  intro.play().catch(fallbackMuted);
-
-  enter.addEventListener('click',()=>{
+  let entered=false;
+  const openSite=()=>{
+    if(entered)return; entered=true;
     gate.classList.add('done');
     root.classList.remove('locked'); document.body.classList.remove('locked');
     intro.pause();
-    bg.play().catch(()=>{});                     // start the looping background
-    toggle();                                    // real user gesture -> music is allowed
+    bg.play().catch(()=>{});
+    toggle();                       // page is already user-activated, so audio is allowed
     setTimeout(()=>gate.remove(),700);
+  };
+
+  // ENTER is up front: the click is the gesture that lets the promo play WITH SOUND
+  enter.addEventListener('click',()=>{
+    enter.classList.remove('show');
+    skip.classList.remove('gone');
+    intro.muted=false; intro.volume=1;
+    intro.play().catch(()=>{        // if it still refuses, don't strand anyone on black
+      intro.muted=true;
+      intro.play().catch(openSite);
+    });
+  },{once:true});
+
+  // the promo ends on ~2s of black, so drop into the site just before it finishes
+  const LEAD=2.4;
+  intro.addEventListener('timeupdate',()=>{
+    if(isFinite(intro.duration)&&intro.currentTime>=intro.duration-LEAD) openSite();
+  });
+  intro.addEventListener('ended',openSite);
+
+  // skip straight in at any point
+  skip.addEventListener('click',openSite);
+  document.addEventListener('keydown',e=>{
+    if(!entered&&!skip.classList.contains('gone')&&
+       (e.key==='Escape'||e.key===' '||e.key==='Enter')){e.preventDefault();openSite();}
   });
 })();
 
