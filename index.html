@@ -40,6 +40,12 @@ html.locked,body.locked{overflow:hidden;height:100%}
   text-indent:.18em;opacity:.75;transition:opacity .15s,border-color .15s}
 #skip:hover{opacity:1;border-color:var(--gold);color:var(--gold)}
 #skip.gone{display:none}
+#sound{position:absolute;left:18px;bottom:18px;z-index:3;display:none;
+  background:rgba(0,0,0,.55);border:2px solid var(--gold);border-radius:6px;
+  padding:9px 16px;font-family:Impact,sans-serif;letter-spacing:.18em;font-size:15px;
+  color:var(--gold);text-indent:.18em;animation:soundPulse 1.4s ease-in-out infinite alternate}
+#sound.show{display:block}
+@keyframes soundPulse{to{box-shadow:0 0 18px var(--gold)}}
 
 /* ---- background video ---- */
 #bgvid{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-3}
@@ -135,10 +141,11 @@ footer img{vertical-align:middle;margin:6px}
 <body>
 
 <div id="gate">
-  <video id="introvid" src="assets/video/PROMO%201.mp4" autoplay muted playsinline></video>
+  <video id="introvid" src="assets/video/PROMO%201.mp4" playsinline preload="auto"></video>
   <button id="tapstart">CLICK TO PLAY</button>
   <button id="enter"><img src="assets/gifs/flag-big.gif" alt=""><span>ENTER</span></button>
   <button id="skip">SKIP</button>
+  <button id="sound">TAP FOR SOUND</button>
 </div>
 
 <video id="bgvid" src="assets/video/PROMO%201.mp4" muted loop playsinline></video>
@@ -286,7 +293,8 @@ song.volume=.55;
 (function(){
   const gate=document.getElementById('gate'), intro=document.getElementById('introvid'),
         enter=document.getElementById('enter'), tap=document.getElementById('tapstart'),
-        skip=document.getElementById('skip'), bg=document.getElementById('bgvid');
+        skip=document.getElementById('skip'), sound=document.getElementById('sound'),
+        bg=document.getElementById('bgvid');
   const root=document.documentElement;
   root.classList.add('locked'); document.body.classList.add('locked');
 
@@ -315,10 +323,38 @@ song.volume=.55;
       setTimeout(showEnter,Math.max(0,intro.duration-LEAD+.4)*1000);
   });
 
-  intro.play().catch(()=>{                       // autoplay blocked -> ask for one click
-    tap.classList.add('show');
-    tap.addEventListener('click',()=>{tap.classList.remove('show');intro.play().catch(showEnter)},{once:true});
+  /* Audio. Browsers only autoplay video that is MUTED, so the promo can either
+     start on its own or have sound -- not both, until the visitor interacts.
+     Try with sound first; if the browser refuses, fall back to muted playback
+     and offer one tap, which is the gesture that unlocks audio. */
+  let wantSound=true;
+  const unmute=()=>{
+    wantSound=true; intro.muted=false; intro.volume=1;
+    sound.classList.remove('show');
+    intro.play().catch(()=>{});
+  };
+  const fallbackMuted=()=>{
+    wantSound=false; intro.muted=true;
+    sound.classList.add('show');
+    intro.play().catch(()=>{                     // even muted playback refused -> ask for a click
+      sound.classList.remove('show'); tap.classList.add('show');
+      tap.addEventListener('click',unmute,{once:true});
+    });
+  };
+
+  sound.addEventListener('click',e=>{e.stopPropagation();unmute()});
+  // any first tap on the gate itself also turns the sound on
+  gate.addEventListener('pointerdown',e=>{
+    if(!wantSound&&e.target!==skip&&e.target!==enter&&!enter.contains(e.target)) unmute();
   });
+  // Chrome pauses an unmuted video that was never allowed sound; catch that too
+  intro.addEventListener('pause',()=>{
+    if(wantSound&&gate.isConnected&&!gate.classList.contains('done')
+       &&!enter.classList.contains('show')&&!intro.ended&&intro.currentTime<1) fallbackMuted();
+  });
+
+  intro.muted=false; intro.volume=1;
+  intro.play().catch(fallbackMuted);
 
   enter.addEventListener('click',()=>{
     gate.classList.add('done');
