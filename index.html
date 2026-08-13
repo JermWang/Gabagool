@@ -81,7 +81,12 @@ h1 span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(5
 .btn.grn{background:var(--grn);color:#fff}
 .btn.wht{background:var(--wht);color:#111}
 .btn.red{background:var(--red);color:#fff}
-.newbadge{height:34px}
+/* free-form sticker: lives outside the button row so it can't shift the layout.
+   nudge it with these four values -- x/y are % of the header box */
+.newbadge{position:absolute;left:var(--new-x,84%);top:var(--new-y,91%);
+  height:var(--new-size,46px);transform:translate(-50%,-50%) rotate(var(--new-rot,-14deg));
+  pointer-events:none;z-index:6}
+@media(max-width:720px){.newbadge{--new-x:87%;--new-y:97%;--new-size:34px}}
 
 /* ---- boombox ---- */
 #boombox{position:fixed;left:14px;bottom:14px;z-index:60;display:flex;align-items:center;gap:8px;
@@ -154,8 +159,8 @@ footer img{vertical-align:middle;margin:6px}
     <a class="btn grn" href="#" onclick="return false">BUY</a>
     <a class="btn wht" href="#chart">CHART</a>
     <a class="btn red" href="https://x.com/Gabagool_Cult" target="_blank" rel="noopener">TWITTER</a>
-    <img class="newbadge" src="assets/gifs/new.gif" alt="new">
   </div>
+  <img class="newbadge" src="assets/gifs/new.gif" alt="new">
 </header>
 
 <img class="flames" src="assets/gifs/flames.gif" alt="">
@@ -240,8 +245,8 @@ const G="assets/gifs/";
 const LINES=[
  [["b","$GABAGOOL"],["i","flag-wave"],["b","ITALIA"],["i","pizza"],["b","CAPICOLA"],["i","flag-wave"],["b","SOPRESSATA"],["i","moneybag"],["b","MORTADELLA"],["i","dollar"],["b","PROSCIUTTO"],["i","flag-big"]],
  [["b","CURED MEAT ONLY"],["i","dice"],["b","0% TAX"],["i","dollar"],["b","LP BURNED"],["i","flag-wave"],["b","RENOUNCED"],["i","accordion"],["b","FAIR LAUNCH"],["i","flag-wave"],["b","NO PRESALE"],["i","pizza"]],
- [["b","SUNDAY GRAVY"],["i","guitar"],["b","THE DELI IS OPEN"],["i","flag-big"],["b","SLICE IT THIN"],["i","cigar"],["b","$GABAGOOL"],["i","flag-wave"]],
- [["b","ITALIAN PRIDE"],["i","flag-big"],["b","NORTH JERSEY"],["i","pizza"],["b","THE OLD NEIGHBORHOOD"],["i","accordion"],["b","GABAGOOL"],["i","flag-wave"],["b","TO THE MOON"],["i","rocket"],["i","moon"]]
+ [["b","CANOLIO"],["i","guitar"],["b","MAMOOK"],["i","flag-big"],["b","BRACIOL'"],["i","cigar"],["b","TRALALERO TRALALA"],["i","pizza"],["b","MANICOTT'"],["i","flag-wave"],["b","OOBATZ"],["i","dice"],["b","MOZZARELL'"],["i","accordion"]],
+ [["b","BOMBARDIRO COCCODRILLO"],["i","flag-big"],["b","PASTA FAZOOL"],["i","pizza"],["b","STUNAD"],["i","accordion"],["b","GABAGOOL"],["i","flag-wave"],["b","TUNG TUNG TUNG"],["i","guitar"],["b","MARONE"],["i","moneybag"],["b","CAPPUCCINO ASSASSINO"],["i","rocket"],["b","AGITA"],["i","moon"],["b","PROSCIUTT'"],["i","cigar"],["b","BRR BRR PATAPIM"],["i","dollar"]]
 ];
 document.querySelectorAll('.ticker .run').forEach(run=>{
   const parts=LINES[+run.dataset.line], html=parts.map(([t,v])=>
