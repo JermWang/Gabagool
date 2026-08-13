@@ -73,6 +73,8 @@ h1 span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(5
 .ca{display:inline-block;margin-top:16px;padding:12px 18px;border:3px dashed var(--gold);
   background:rgba(0,0,0,.78);font-family:"Courier New",monospace;font-weight:700;
   font-size:clamp(11px,2.6vw,17px);word-break:break-all;max-width:92vw;color:#9dff9d}
+.notlive{margin-top:9px;font-family:Impact,sans-serif;letter-spacing:.16em;font-size:14px;
+  color:#ff8a8a;text-indent:.16em}
 .btns{margin-top:20px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:center}
 /* italian flag, left to right: green / white / red */
 .btn{text-decoration:none;font-family:Impact,sans-serif;font-size:24px;letter-spacing:1px;
@@ -154,7 +156,9 @@ footer img{vertical-align:middle;margin:6px}
   <img class="pfp" id="pfp" src="assets/artwork/PFP.png" alt="Da Boss">
   <h1><img src="assets/artwork/logo-text.png" alt="Gabagool"><span>Gabagool</span></h1>
   <div class="sub">Wheres the fucking Gabagool?!</div>
-  <div class="ca" id="ca" title="click to copy">CA: ARRIVA ARRIVA, ASPETTA</div>
+  <div class="ca" id="ca" title="click to copy"
+       data-ca="Cm8DuQev39qccry2nc6axYgZapTvKHYNqj3N6bF9pump">CA: <span id="caval">Cm8DuQev39qccry2nc6axYgZapTvKHYNqj3N6bF9pump</span></div>
+  <div class="notlive">ANCORA NON VIVO &nbsp;-&nbsp; ASPETTA, STUNAD</div>
   <div class="btns">
     <a class="btn grn" href="#" onclick="return false">BUY</a>
     <a class="btn wht" href="#chart">CHART</a>
@@ -355,11 +359,20 @@ song.volume=.55;
 })();
 
 /* ---------- copy CA ---------- */
-const ca=document.getElementById('ca');
+const ca=document.getElementById('ca'), caval=document.getElementById('caval');
 ca.addEventListener('click',()=>{
-  navigator.clipboard?.writeText(ca.textContent.replace('CA: ','')).catch(()=>{});
-  const o=ca.textContent; ca.textContent="COPIATO, BRAVO";
-  setTimeout(()=>ca.textContent=o,1400);
+  const addr=ca.dataset.ca;                       // copy the address, never the label
+  const done=()=>{const o=caval.textContent;caval.textContent="COPIATO, BRAVO";
+                  setTimeout(()=>caval.textContent=o,1400)};
+  if(navigator.clipboard?.writeText){navigator.clipboard.writeText(addr).then(done).catch(fallback)}
+  else fallback();
+  function fallback(){                            // http / older browsers have no clipboard API
+    const t=document.createElement('textarea');
+    t.value=addr; t.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(t); t.select();
+    try{document.execCommand('copy');done()}catch(e){}
+    t.remove();
+  }
 });
 
 /* ---------- raining gifs (transparent stickers only) ---------- */
