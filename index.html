@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>$GABAGOOL</title>
+<link rel="icon" href="public/artwork/PFP.png">
+<style>
+:root{--grn:#008C45;--wht:#F4F5F0;--red:#CD212A;--gold:#FFD54A;
+  /* real salami, cropped straight out of the PFP artwork */
+  --salami:url("public/cursor-salami.png") 51 10, auto}
+body,a,button,img,video,.ca,input{cursor:var(--salami)}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:#000;color:var(--wht);overflow-x:hidden;
+  font-family:"Comic Sans MS","Trebuchet MS",cursive,sans-serif;
+}
+
+/* ---- intro gate ---- */
+html.locked,body.locked{overflow:hidden;height:100%}
+#gate{position:fixed;inset:0;z-index:999;background:#000;display:flex;
+  align-items:center;justify-content:center;transition:opacity .6s ease}
+#gate.done{opacity:0;pointer-events:none}
+#introvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#enter{position:relative;z-index:2;display:none;flex-direction:column;align-items:center;
+  gap:6px;background:none;border:0;padding:0;animation:enterIn .8s ease both}
+#enter.show{display:flex}
+#enter img{width:clamp(190px,26vw,300px);height:auto;display:block}
+#enter span{font-family:Impact,"Arial Black",sans-serif;letter-spacing:.32em;
+  font-size:clamp(22px,3.4vw,38px);color:#fff;text-indent:.32em}
+#enter:hover span{color:var(--gold)}
+@keyframes enterIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+#tapstart{position:relative;z-index:2;display:none;font-family:Impact,sans-serif;
+  letter-spacing:.3em;font-size:20px;color:#fff;background:none;border:0}
+#tapstart.show{display:block}
+#skip{position:absolute;right:18px;bottom:18px;z-index:3;background:rgba(0,0,0,.55);
+  border:2px solid rgba(255,255,255,.55);border-radius:6px;padding:9px 16px;
+  font-family:Impact,sans-serif;letter-spacing:.18em;font-size:15px;color:#fff;
+  text-indent:.18em;opacity:.75;transition:opacity .15s,border-color .15s}
+#skip:hover{opacity:1;border-color:var(--gold);color:var(--gold)}
+#skip.gone{display:none}
+
+/* ---- background video ---- */
+#bgvid{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-3}
+.scrim{position:fixed;inset:0;z-index:-2;background:radial-gradient(circle at 50% 38%,rgba(0,0,0,.2),rgba(0,0,0,.85) 82%)}
+.scan{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.25;
+  background:repeating-linear-gradient(to bottom,rgba(0,0,0,.6) 0 1px,transparent 1px 3px)}
+
+/* ---- gif tickers ---- */
+.ticker{overflow:hidden;white-space:nowrap;background:#000;
+  border-top:3px solid var(--gold);border-bottom:3px solid var(--gold)}
+.ticker .run{display:inline-block;padding:6px 0;animation:scrollx 30s linear infinite}
+.ticker.rev .run{animation-direction:reverse}
+.ticker .run img{height:34px;vertical-align:middle;margin:0 10px;image-rendering:pixelated}
+.ticker .run b{font-family:Impact,"Arial Black",sans-serif;font-size:24px;letter-spacing:2px;
+  color:var(--gold);vertical-align:middle}
+@keyframes scrollx{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ticker.top{position:sticky;top:0;z-index:50}
+.flames{display:block;width:100%;height:44px;object-fit:fill}
+
+/* ---- hero ---- */
+header{text-align:center;padding:40px 16px 26px;position:relative}
+.pfp{width:190px;height:190px;border-radius:50%;object-fit:cover;
+  border:6px solid var(--gold);box-shadow:0 0 40px var(--gold),0 0 90px var(--red)}
+.flank{position:absolute;top:60px;width:130px}
+.flank.l{left:4vw}.flank.r{right:4vw}
+@media(max-width:900px){.flank{display:none}}
+/* the real wordmark */
+h1{margin:18px 0 8px;line-height:0}
+h1 img{display:block;margin:0 auto;width:clamp(260px,60vw,560px);height:auto}
+h1 span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.sub{margin-top:6px;font-family:"Helvetica Neue",Arial,sans-serif;font-weight:400;
+  font-size:clamp(13px,2.4vw,20px);letter-spacing:.22em;text-transform:uppercase;
+  color:#C9C4B8}
+.ca{display:inline-block;margin-top:16px;padding:12px 18px;border:3px dashed var(--gold);
+  background:rgba(0,0,0,.78);font-family:"Courier New",monospace;font-weight:700;
+  font-size:clamp(11px,2.6vw,17px);word-break:break-all;max-width:92vw;color:#9dff9d}
+.btns{margin-top:20px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:center}
+/* italian flag, left to right: green / white / red */
+.btn{text-decoration:none;font-family:Impact,sans-serif;font-size:24px;letter-spacing:1px;
+  padding:14px 30px;border:3px solid #000;border-radius:8px;transition:.08s}
+.btn:active{transform:translateY(3px)}
+.btn.grn{background:var(--grn);color:#fff}
+.btn.wht{background:var(--wht);color:#111}
+.btn.red{background:var(--red);color:#fff}
+.newbadge{height:34px}
+
+/* ---- boombox ---- */
+#boombox{position:fixed;left:14px;bottom:14px;z-index:60;display:flex;align-items:center;gap:8px;
+  background:rgba(0,0,0,.85);border:3px solid var(--gold);border-radius:10px;
+  padding:8px 13px;font-weight:900;font-size:14px;color:var(--gold);font-family:inherit}
+#boombox img{height:26px}
+#boombox.playing{animation:pulse .5s ease-in-out infinite alternate}
+@keyframes pulse{to{box-shadow:0 0 34px var(--gold);transform:scale(1.05)}}
+
+/* ---- sections ---- */
+main{max-width:1080px;margin:0 auto;padding:26px 16px 80px}
+.panel{background:rgba(0,0,0,.75);border:4px ridge var(--gold);border-radius:14px;
+  padding:24px;margin:30px 0;backdrop-filter:blur(3px);position:relative}
+h2{font-family:Impact,sans-serif;font-size:clamp(30px,6vw,52px);margin:0 0 14px;
+  color:var(--gold);text-align:center;letter-spacing:1px}
+h2 img{height:44px;vertical-align:-8px;margin:0 8px}
+p{font-size:18px;line-height:1.65}
+.tomato{color:#ff6b6b}.basil{color:#6bff9c}.gold{color:var(--gold)}
+.corner{position:absolute;height:60px;top:-16px;right:-10px}
+
+/* 18 tiles: only 2 / 3 / 6 columns divide evenly, so pin those instead of auto-filling */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(min-width:620px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1000px){.grid{grid-template-columns:repeat(6,1fr)}}
+.grid img,.grid video{width:100%;height:210px;object-fit:cover;display:block;
+  border:4px solid var(--gold);border-radius:8px;transition:.15s}
+@media(min-width:1000px){.grid img,.grid video{height:150px}}
+.grid img:hover,.grid video:hover{transform:scale(1.07) rotate(-2deg);
+  box-shadow:0 0 30px var(--gold);z-index:5;position:relative}
+
+.tok{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.tok li{background:linear-gradient(90deg,rgba(0,140,69,.4),rgba(205,33,42,.4));
+  border-left:8px solid var(--gold);padding:14px 16px;font-size:19px;font-weight:700;
+  display:flex;align-items:center;gap:12px}
+.tok li img{height:34px;flex:0 0 auto}
+.tok b{color:var(--gold);font-size:23px}
+ol{font-size:18px;line-height:1.9}ol b{color:var(--gold)}
+
+footer{text-align:center;padding:24px 16px 70px;font-size:15px;color:#ddd}
+footer img{vertical-align:middle;margin:6px}
+.counter{display:inline-block;background:#000;border:2px solid #0f0;color:#0f0;
+  font-family:"Courier New",monospace;padding:5px 12px;letter-spacing:5px;font-size:20px}
+.floater{position:fixed;top:-120px;z-index:40;pointer-events:none;animation:fall linear forwards}
+.floater img{height:46px}
+@keyframes fall{from{transform:translateY(0)}to{transform:translateY(118vh)}}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <video id="introvid" src="public/video/PROMO%201.mp4" autoplay muted playsinline></video>
+  <button id="tapstart">CLICK TO PLAY</button>
+  <button id="enter"><img src="public/gifs/flag-big.gif" alt=""><span>ENTER</span></button>
+  <button id="skip">SKIP</button>
+</div>
+
+<video id="bgvid" src="public/video/PROMO%201.mp4" muted loop playsinline></video>
+<div class="scrim"></div><div class="scan"></div>
+
+<div class="ticker top"><span class="run" data-line="0"></span></div>
+
+<header>
+  <img class="flank l" src="public/gifs/flag-big.gif" alt="italia">
+  <img class="flank r" src="public/gifs/flag-big.gif" alt="italia">
+  <img class="pfp" id="pfp" src="public/artwork/PFP.png" alt="Da Boss">
+  <h1><img src="public/artwork/logo-text.png" alt="Gabagool"><span>Gabagool</span></h1>
+  <div class="sub">Where the fucks the gabagool?</div>
+  <div class="ca" id="ca" title="click to copy">CA: COMING SOON</div>
+  <div class="btns">
+    <a class="btn grn" href="#" onclick="return false">BUY</a>
+    <a class="btn wht" href="#chart">CHART</a>
+    <a class="btn red" href="#" onclick="return false">TWITTER</a>
+    <img class="newbadge" src="public/gifs/new.gif" alt="new">
+  </div>
+</header>
+
+<img class="flames" src="public/gifs/flames.gif" alt="">
+<div class="ticker rev"><span class="run" data-line="1"></span></div>
+
+<main>
+
+<section class="panel">
+  <img class="corner" src="public/gifs/cigar.gif" alt="">
+  <h2><img src="public/gifs/flag-wave.gif" alt="">WHAT IT IS<img src="public/gifs/flag-wave.gif" alt=""></h2>
+  <p><b class="gold">GABAGOOL</b> is a meme coin about cured meat. That's the whole pitch. No roadmap, no utility deck, no promises we'd have to walk back later.</p>
+  <p>No VC allocation. No team tokens. No presale. Just a community, a deli counter, and a chart. Show up, hang around, buy a stick.</p>
+  <p style="text-align:center;margin-bottom:0">
+    <img src="public/gifs/accordion.gif" alt="" style="height:90px;vertical-align:middle">
+    <img src="public/gifs/pizza.gif" alt="" style="height:90px;vertical-align:middle">
+    <img src="public/gifs/flag-big.gif" alt="" style="height:90px;vertical-align:middle">
+    <img src="public/gifs/moneybag.gif" alt="" style="height:90px;vertical-align:middle">
+    <img src="public/gifs/guitar.gif" alt="" style="height:90px;vertical-align:middle">
+  </p>
+</section>
+
+<div class="ticker"><span class="run" data-line="2"></span></div>
+
+<section class="panel">
+  <h2>THE FAMILY ALBUM</h2>
+  <div class="grid" id="gal"></div>
+</section>
+
+<img class="flames" src="public/gifs/flames2.gif" alt="">
+
+<section class="panel" id="chart">
+  <img class="corner" src="public/gifs/dollar.gif" alt="">
+  <h2>TOKENOMICS</h2>
+  <ul class="tok">
+    <li><img src="public/gifs/dollar.gif" alt=""><span><b>1,000,000,000</b> - total supply</span></li>
+    <li><img src="public/gifs/moneybag.gif" alt=""><span><b>0% / 0%</b> - buy and sell tax</span></li>
+    <li><img src="public/gifs/flames2.gif" alt="" style="height:26px"><span><b>LP BURNED</b> - liquidity locked forever</span></li>
+    <li><img src="public/gifs/dice.gif" alt=""><span><b>RENOUNCED</b> - no owner, no mint function</span></li>
+    <li><img src="public/gifs/flag-wave.gif" alt=""><span><b>100%</b> - fair launch, no presale</span></li>
+  </ul>
+</section>
+
+<div class="ticker rev"><span class="run" data-line="3"></span></div>
+
+<section class="panel">
+  <img class="corner" src="public/gifs/rocket.gif" alt="">
+  <h2>HOW TO BUY</h2>
+  <ol>
+    <li>Set up a <b>wallet</b> - Phantom or MetaMask.</li>
+    <li>Fund it.</li>
+    <li>Paste the <b>contract address</b> into your swap. Check it twice.</li>
+    <li>Swap for <b>$GABAGOOL</b>.</li>
+    <li>Hold.</li>
+  </ol>
+  <p style="text-align:center;margin-bottom:0">
+    <img src="public/gifs/rocket.gif" alt="" style="height:80px;vertical-align:middle">
+    <img src="public/gifs/moon.gif" alt="" style="height:80px;vertical-align:middle">
+  </p>
+</section>
+
+<footer>
+  <div class="counter" id="hits">00013370</div>
+  <p>
+    <img src="public/gifs/accordion.gif" alt="" style="height:70px">
+    <img src="public/gifs/flag-wave.gif" alt="" style="height:70px">
+    <img src="public/gifs/chef.gif" alt="" style="height:70px">
+  </p>
+  <p>Best viewed in <b>Netscape Navigator</b> at 800x600<br>
+  $GABAGOOL is a meme coin with no intrinsic value and no expectation of financial return.
+  Do your own research.<br>
+  &copy; 2026 GABAGOOL</p>
+  <p style="font-size:12px;color:#888">Animated GIFs preserved by the Internet Archive's GifCities (GeoCities, 1994-2009).</p>
+</footer>
+</main>
+
+<audio id="song" src="public/music/The%20Sopranos%20theme%20song%20-%20Woke%20up%20this%20morning.mp3" loop></audio>
+<button id="boombox"><img src="public/gifs/flag-wave.gif" alt=""><span>PLAY MUSIC</span></button>
+
+<script>
+const G="public/gifs/";
+/* ---------- tickers: real gifs + text, duplicated for seamless loop ---------- */
+const LINES=[
+ [["b","$GABAGOOL"],["i","flag-wave"],["b","ITALIA"],["i","pizza"],["b","CAPICOLA"],["i","flag-wave"],["b","SOPRESSATA"],["i","moneybag"],["b","MORTADELLA"],["i","dollar"],["b","PROSCIUTTO"],["i","flag-big"]],
+ [["b","CURED MEAT ONLY"],["i","dice"],["b","0% TAX"],["i","dollar"],["b","LP BURNED"],["i","flag-wave"],["b","RENOUNCED"],["i","accordion"],["b","FAIR LAUNCH"],["i","flag-wave"],["b","NO PRESALE"],["i","pizza"]],
+ [["b","SUNDAY GRAVY"],["i","guitar"],["b","THE DELI IS OPEN"],["i","flag-big"],["b","SLICE IT THIN"],["i","cigar"],["b","$GABAGOOL"],["i","flag-wave"]],
+ [["b","ITALIAN PRIDE"],["i","flag-big"],["b","NORTH JERSEY"],["i","pizza"],["b","THE OLD NEIGHBORHOOD"],["i","accordion"],["b","GABAGOOL"],["i","flag-wave"],["b","TO THE MOON"],["i","rocket"],["i","moon"]]
+];
+document.querySelectorAll('.ticker .run').forEach(run=>{
+  const parts=LINES[+run.dataset.line], html=parts.map(([t,v])=>
+    t==='b'?`<b>${v}</b>`:`<img src="${G}${v}.gif" alt="">`).join('');
+  run.innerHTML=(html+' ').repeat(6);
+});
+
+/* ---------- gallery ---------- */
+const ART="public/artwork/";
+const PICS=["soprano-montana.png","bowling gabagool.png","gabagool fishing catch.png","banner.png",
+"Firefly_Gemini Flash_the mob boss lounging in a floaty at the pool holding a stick of gabagool and a cigar 527642.png",
+"Firefly_Gemini Flash_the mob boss eating a pizza with his goons and laughing 527642.png",
+"Firefly_Gemini Flash_the mob boss putting on a ski mask with his goons theyre about to go do a robbery. ke 527642.png",
+"Firefly_Gemini Flash_the mob boss suprsing his girlfriend with a bouquet of flowers like the refernce imag 527642.png",
+"Men_praying_in_stone_church_202608121709.jpeg"];
+const VIDS=["Mobsters_lying_on_gabagool_pile_202608121659.mp4","i breathe gabagool.mp4","its goin to the moon.mp4",
+"canoli.mp4","glizzies.mp4","gabagool truck sale.mp4","Two_men_arguing_in_kitchen_202608121933.mp4",
+"Deli_owner_greeting_viewer_202608122145.mp4","Brother_talking_with_gabagool_202608121750.mp4"];
+const gal=document.getElementById('gal'), mixed=[];
+PICS.forEach((p,i)=>{mixed.push(['i',p]); if(VIDS[i])mixed.push(['v',VIDS[i]])});
+mixed.forEach(([t,s])=>{
+  const el=document.createElement(t==='i'?'img':'video');
+  el.src=ART+encodeURIComponent(s);
+  if(t==='v'){el.muted=true;el.loop=true;el.playsInline=true;el.autoplay=true}
+  else{el.loading="lazy";el.alt="gabagool"}
+  gal.appendChild(el);
+});
+
+/* ---------- music ---------- */
+const song=document.getElementById('song'), bb=document.getElementById('boombox'), bbt=bb.querySelector('span');
+function toggle(){
+  if(song.paused){song.volume=.55;song.play().then(()=>{bbt.textContent="MUSIC ON";bb.classList.add('playing')}).catch(()=>{});}
+  else{song.pause();bbt.textContent="PLAY MUSIC";bb.classList.remove('playing');}
+}
+bb.addEventListener('click',e=>{e.stopPropagation();toggle()});
+song.volume=.55;
+
+/* ---------- intro gate: promo plays through, then the flag lets you in ---------- */
+(function(){
+  const gate=document.getElementById('gate'), intro=document.getElementById('introvid'),
+        enter=document.getElementById('enter'), tap=document.getElementById('tapstart'),
+        skip=document.getElementById('skip'), bg=document.getElementById('bgvid');
+  const root=document.documentElement;
+  root.classList.add('locked'); document.body.classList.add('locked');
+
+  const showEnter=()=>{
+    tap.classList.remove('show'); skip.classList.add('gone');
+    enter.classList.add('show');
+  };
+  // the promo ends on ~2s of black, so bring the flag up before the video actually finishes
+  const LEAD=2.4;
+  intro.addEventListener('timeupdate',()=>{
+    if(isFinite(intro.duration)&&intro.currentTime>=intro.duration-LEAD) showEnter();
+  });
+  intro.addEventListener('ended',showEnter);
+
+  // skip the promo at any point -> straight to the flag
+  const doSkip=()=>{intro.pause(); showEnter()};
+  skip.addEventListener('click',doSkip);
+  document.addEventListener('keydown',e=>{
+    if(gate.isConnected&&(e.key==='Escape'||e.key===' '||e.key==='Enter')&&!enter.classList.contains('show')){
+      e.preventDefault(); doSkip();
+    }
+  });
+  // safety net: if the file never reports progress, fall back to its duration
+  intro.addEventListener('loadedmetadata',()=>{
+    if(isFinite(intro.duration)&&intro.duration>0)
+      setTimeout(showEnter,Math.max(0,intro.duration-LEAD+.4)*1000);
+  });
+
+  intro.play().catch(()=>{                       // autoplay blocked -> ask for one click
+    tap.classList.add('show');
+    tap.addEventListener('click',()=>{tap.classList.remove('show');intro.play().catch(showEnter)},{once:true});
+  });
+
+  enter.addEventListener('click',()=>{
+    gate.classList.add('done');
+    root.classList.remove('locked'); document.body.classList.remove('locked');
+    intro.pause();
+    bg.play().catch(()=>{});                     // start the looping background
+    toggle();                                    // real user gesture -> music is allowed
+    setTimeout(()=>gate.remove(),700);
+  });
+})();
+
+/* ---------- copy CA ---------- */
+const ca=document.getElementById('ca');
+ca.addEventListener('click',()=>{
+  navigator.clipboard?.writeText(ca.textContent.replace('CA: ','')).catch(()=>{});
+  const o=ca.textContent; ca.textContent="COPIED";
+  setTimeout(()=>ca.textContent=o,1400);
+});
+
+/* ---------- raining gifs (transparent stickers only) ---------- */
+const RAIN=["flag-big","pizza","dollar","moneybag","rocket","dice","moon","guitar"];
+setInterval(()=>{
+  const d=document.createElement('div'); d.className='floater';
+  const im=document.createElement('img'); im.src=G+RAIN[Math.floor(Math.random()*RAIN.length)]+".gif";
+  d.appendChild(im);
+  d.style.left=Math.random()*94+'vw';
+  const dur=9+Math.random()*7;
+  d.style.animationDuration=dur+'s';
+  document.body.appendChild(d); setTimeout(()=>d.remove(),dur*1000+500);
+},2600);
+
+/* ---------- hit counter ---------- */
+let hits=13370+Math.floor(Math.random()*400);
+const hEl=document.getElementById('hits');
+hEl.textContent=String(hits).padStart(8,'0');
+setInterval(()=>{hits++;hEl.textContent=String(hits).padStart(8,'0')},3000);
+</script>
+</body>
+</html>
