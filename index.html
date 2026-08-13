@@ -137,7 +137,8 @@ footer img{vertical-align:middle;margin:6px}
   <button id="skip" class="gone">SKIP</button>
 </div>
 
-<video id="bgvid" src="assets/video/PROMO%201.mp4" muted loop playsinline></video>
+<!-- no second copy of the promo here: the intro video is reused as the background
+     once you enter, so the 39MB file is only ever fetched once -->
 <div class="scrim"></div><div class="scan"></div>
 
 <div class="ticker top"><span class="run" data-line="0"></span></div>
@@ -230,7 +231,7 @@ footer img{vertical-align:middle;margin:6px}
 </footer>
 </main>
 
-<audio id="song" src="assets/music/The%20Sopranos%20-%20Con%20Te%20Partiro.mp3" loop></audio>
+<audio id="song" src="assets/music/The%20Sopranos%20-%20Con%20Te%20Partiro.mp3" loop preload="auto"></audio>
 <button id="boombox"><img src="assets/gifs/flag-wave.gif" alt=""><span>PLAY MUSIC</span></button>
 
 <script>
@@ -261,11 +262,24 @@ const VIDS=["Mobsters_lying_on_gabagool_pile_202608121659.mp4","i breathe gabago
 "Deli_owner_greeting_viewer_202608122145.mp4","Brother_talking_with_gabagool_202608121750.mp4"];
 const gal=document.getElementById('gal'), mixed=[];
 PICS.forEach((p,i)=>{mixed.push(['i',p]); if(VIDS[i])mixed.push(['v',VIDS[i]])});
+/* Gallery clips play only while on screen. Autoplaying all nine at once ate the
+   whole connection and left the music with nothing to buffer into. */
+const seen=new IntersectionObserver(es=>es.forEach(e=>{
+  const v=e.target;
+  if(e.isIntersecting){if(!v.src)v.src=v.dataset.src; v.play().catch(()=>{})}
+  else v.pause();
+}),{rootMargin:'200px'});
+
 mixed.forEach(([t,s])=>{
   const el=document.createElement(t==='i'?'img':'video');
-  el.src=ART+encodeURIComponent(s);
-  if(t==='v'){el.muted=true;el.loop=true;el.playsInline=true;el.autoplay=true}
-  else{el.loading="lazy";el.alt="gabagool"}
+  if(t==='v'){
+    el.dataset.src=ART+encodeURIComponent(s);
+    el.muted=true;el.loop=true;el.playsInline=true;el.preload='none';
+    seen.observe(el);
+  }else{
+    el.src=ART+encodeURIComponent(s);
+    el.loading="lazy";el.alt="gabagool";
+  }
   gal.appendChild(el);
 });
 
@@ -275,14 +289,24 @@ function toggle(){
   if(song.paused){song.volume=.55;song.play().then(()=>{bbt.textContent="MUSIC ON";bb.classList.add('playing')}).catch(()=>{});}
   else{song.pause();bbt.textContent="PLAY MUSIC";bb.classList.remove('playing');}
 }
+/* Start the track only once enough of it is buffered. Kicking it off while the
+   browser is still fetching can leave it starved, which sounds like stuttering
+   or the opening bar repeating. Falls back to playing anyway after 4s. */
+function startSong(){
+  if(!song.paused)return;
+  if(song.readyState>=3){toggle();return;}
+  let done=false;
+  const go=()=>{if(done)return;done=true;song.removeEventListener('canplaythrough',go);toggle()};
+  song.addEventListener('canplaythrough',go);
+  setTimeout(go,4000);
+}
 bb.addEventListener('click',e=>{e.stopPropagation();toggle()});
 song.volume=.55;
 
 /* ---------- intro gate: click ENTER -> promo plays with sound -> site ---------- */
 (function(){
   const gate=document.getElementById('gate'), intro=document.getElementById('introvid'),
-        enter=document.getElementById('enter'), skip=document.getElementById('skip'),
-        bg=document.getElementById('bgvid');
+        enter=document.getElementById('enter'), skip=document.getElementById('skip');
   const root=document.documentElement;
   root.classList.add('locked'); document.body.classList.add('locked');
 
@@ -291,9 +315,11 @@ song.volume=.55;
     if(entered)return; entered=true;
     gate.classList.add('done');
     root.classList.remove('locked'); document.body.classList.remove('locked');
-    intro.pause();
-    bg.play().catch(()=>{});
-    toggle();                       // page is already user-activated, so audio is allowed
+    // reuse the promo we already downloaded as the looping background
+    intro.id='bgvid'; intro.muted=true; intro.loop=true;
+    document.body.insertBefore(intro,document.body.firstChild);
+    intro.currentTime=0; intro.play().catch(()=>{});
+    startSong();                    // page is already user-activated, so audio is allowed
     setTimeout(()=>gate.remove(),700);
   };
 
