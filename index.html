@@ -7,6 +7,8 @@
 <link rel="icon" href="assets/artwork/PFP.png">
 <style>
 :root{--grn:#008C45;--wht:#F4F5F0;--red:#CD212A;--gold:#FFD54A;
+  /* robinhood highlighter lime */
+  --rh:#CCFF00;--rh-deep:#9BC400;
   /* real salami, cropped straight out of the PFP artwork */
   --salami:url("assets/cursor-salami.png") 51 10, auto}
 body,a,button,img,video,.ca,input{cursor:var(--salami)}
@@ -70,9 +72,24 @@ h1 span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(5
 .sub{margin-top:6px;font-family:"Helvetica Neue",Arial,sans-serif;font-weight:400;
   font-size:clamp(13px,2.4vw,20px);letter-spacing:.22em;text-transform:uppercase;
   color:#C9C4B8}
-.ca{display:inline-block;margin-top:16px;padding:12px 18px;border:3px dashed var(--gold);
-  background:rgba(0,0,0,.78);font-family:"Courier New",monospace;font-weight:700;
-  font-size:clamp(11px,2.6vw,17px);word-break:break-all;max-width:92vw;color:#9dff9d}
+.ca{display:inline-flex;align-items:center;gap:10px;margin-top:18px;
+  padding:10px 14px 10px 10px;max-width:92vw;
+  background:linear-gradient(#0c1000,#000);
+  border:3px solid var(--rh);border-radius:12px;
+  box-shadow:0 0 0 3px #000,0 0 18px rgba(204,255,0,.42),inset 0 0 22px rgba(204,255,0,.10);
+  font-family:"Courier New",monospace;font-weight:700;
+  transition:transform .08s,box-shadow .18s}
+.ca:hover{box-shadow:0 0 0 3px #000,0 0 28px rgba(204,255,0,.8),inset 0 0 26px rgba(204,255,0,.18)}
+.ca:active{transform:translateY(3px)}
+.ca .tag{flex:none;padding:5px 10px;border-radius:7px;background:var(--rh);color:#0a0e00;
+  font-family:Impact,sans-serif;letter-spacing:.12em;font-size:14px;line-height:1}
+#caval{color:var(--rh);text-shadow:0 0 10px rgba(204,255,0,.5);
+  font-size:clamp(11px,2.6vw,17px);word-break:break-all;line-height:1.25}
+.ca .copy{flex:none;padding-left:10px;border-left:2px solid rgba(204,255,0,.35);
+  font-family:Impact,sans-serif;font-size:12px;letter-spacing:.1em;color:var(--rh-deep)}
+.ca:hover .copy{color:var(--rh)}
+.ca.waiting .copy{display:none}
+@media(max-width:520px){.ca .copy{display:none}}
 .notlive{margin-top:9px;font-family:Impact,sans-serif;letter-spacing:.16em;font-size:14px;
   color:#ff8a8a;text-indent:.16em}
 .btns{margin-top:20px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;align-items:center}
@@ -157,7 +174,7 @@ footer img{vertical-align:middle;margin:6px}
   <h1><img src="assets/artwork/logo-text.png" alt="Gabagool"><span>Gabagool</span></h1>
   <div class="sub">Wheres the fucking Gabagool?!</div>
   <div class="ca" id="ca" title="click to copy"
-       data-ca="">CA: <span id="caval">PRESTO, STUNAD</span></div>
+       data-ca=""><span class="tag">CA</span><span id="caval">PRESTO, STUNAD</span><span class="copy">COPIA</span></div>
   <div class="notlive">ANCORA NON VIVO &nbsp;-&nbsp; ASPETTA, STUNAD</div>
   <div class="btns">
     <a class="btn grn" href="#" onclick="return false">BUY</a>
@@ -360,6 +377,7 @@ song.volume=.55;
 
 /* ---------- copy CA ---------- */
 const ca=document.getElementById('ca'), caval=document.getElementById('caval');
+if(!ca.dataset.ca) ca.classList.add('waiting');   // no address yet, so no copy hint
 ca.addEventListener('click',()=>{
   const addr=ca.dataset.ca;                       // copy the address, never the label
   if(!addr) return;                               // nothing to copy until the CA drops
