@@ -157,12 +157,12 @@ footer img{vertical-align:middle;margin:6px}
   <h1><img src="assets/artwork/logo-text.png" alt="Gabagool"><span>Gabagool</span></h1>
   <div class="sub">Wheres the fucking Gabagool?!</div>
   <div class="ca" id="ca" title="click to copy"
-       data-ca="Cm8DuQev39qccry2nc6axYgZapTvKHYNqj3N6bF9pump">CA: <span id="caval">Cm8DuQev39qccry2nc6axYgZapTvKHYNqj3N6bF9pump</span></div>
+       data-ca="">CA: <span id="caval">PRESTO, STUNAD</span></div>
   <div class="notlive">ANCORA NON VIVO &nbsp;-&nbsp; ASPETTA, STUNAD</div>
   <div class="btns">
     <a class="btn grn" href="#" onclick="return false">BUY</a>
     <a class="btn wht" href="#chart">CHART</a>
-    <a class="btn red" href="https://x.com/Gabagool_Cult" target="_blank" rel="noopener">TWITTER</a>
+    <a class="btn red" href="#" onclick="return false">TWITTER</a>
   </div>
   <img class="newbadge" src="assets/gifs/new.gif" alt="new">
 </header>
@@ -362,6 +362,7 @@ song.volume=.55;
 const ca=document.getElementById('ca'), caval=document.getElementById('caval');
 ca.addEventListener('click',()=>{
   const addr=ca.dataset.ca;                       // copy the address, never the label
+  if(!addr) return;                               // nothing to copy until the CA drops
   const done=()=>{const o=caval.textContent;caval.textContent="COPIATO, BRAVO";
                   setTimeout(()=>caval.textContent=o,1400)};
   if(navigator.clipboard?.writeText){navigator.clipboard.writeText(addr).then(done).catch(fallback)}
