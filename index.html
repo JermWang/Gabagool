@@ -139,7 +139,7 @@ footer img{vertical-align:middle;margin:6px}
 <body>
 
 <div id="gate">
-  <video id="introvid" src="assets/video/PROMO%201.mp4" playsinline preload="auto"></video>
+  <video id="introvid" src="assets/video/PROMO%201.mp4" playsinline preload="auto" muted></video>
   <button id="enter" class="show"><img src="assets/gifs/flag-big.gif" alt=""><span>ENTER</span></button>
   <button id="skip" class="gone">SKIP</button>
 </div>
@@ -283,7 +283,7 @@ mixed.forEach(([t,s])=>{
   const el=document.createElement(t==='i'?'img':'video');
   if(t==='v'){
     el.dataset.src=ART+encodeURIComponent(s);
-    el.muted=true;el.loop=true;el.playsInline=true;el.preload='none';
+    el.muted=true;el.setAttribute('muted','');el.loop=true;el.playsInline=true;el.preload='none';
     seen.observe(el);
   }else{
     el.src=ART+encodeURIComponent(s);
@@ -325,7 +325,7 @@ song.volume=.55;
     gate.classList.add('done');
     root.classList.remove('locked'); document.body.classList.remove('locked');
     // reuse the promo we already downloaded as the looping background
-    intro.id='bgvid'; intro.muted=true; intro.loop=true;
+    intro.id='bgvid'; intro.muted=true; intro.setAttribute('muted',''); intro.volume=0; intro.loop=true;
     document.body.insertBefore(intro,document.body.firstChild);
     intro.currentTime=0; intro.play().catch(()=>{});
     startSong();                    // page is already user-activated, so audio is allowed
@@ -336,7 +336,7 @@ song.volume=.55;
   enter.addEventListener('click',()=>{
     enter.classList.remove('show');
     skip.classList.remove('gone');
-    intro.muted=false; intro.volume=1;
+    intro.removeAttribute('muted'); intro.muted=false; intro.volume=1;
     intro.play().catch(()=>{        // if it still refuses, don't strand anyone on black
       intro.muted=true;
       intro.play().catch(openSite);
